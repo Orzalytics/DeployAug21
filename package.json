@@ -13,6 +13,7 @@
     "xlsx": "^0.10.3"
   },
   "dependencies": {
+    "cors": "^2.8.4",
     "fast-csv": "^2.4.0"
   }
 }

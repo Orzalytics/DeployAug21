@@ -6,9 +6,11 @@
   var bodyParser = require('body-parser');
   var parseXlsx = require('xlsx');
   var csv = require('fast-csv');
+  var cors = require('cors');
   var app = express();
 
 app.set('port', process.env.PORT || 8080);
+app.use(cors());
 app.use(express.static(__dirname + '/app'));
 app.use(bodyParser.json());
 
@@ -136,7 +138,7 @@ app.get('/ret/:sDate', function(req, res){
 });
 
 // get fund ids and names from MySQL database
-app.get('/ret1', function(req, res){
+app.get('/fundheader', function(req, res){
   var csvdata = [];
   var stream = fs.createReadStream(__dirname + "/app/testdb/fundnames.csv");
   csv.fromStream(stream, {headers : ["fund_id_alias_fund", "alias", "alias_match_1", "alias_match_2", "alias_match_3"]})
@@ -148,7 +150,7 @@ app.get('/ret1', function(req, res){
     });
 });
 
-app.get('/userInfo', function(req, res){
+app.get('/userPortList', function(req, res){
   var csvdata = [];
   var stream = fs.createReadStream(__dirname + "/app/testdb/portnames.csv");
   csv.fromStream(stream, {headers : ["portfolio_id", "portfolio_name_saver"]})
