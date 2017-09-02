@@ -1,7 +1,7 @@
 (function() {
 'use strict';
   angular.module('orzaApp.directives')
-      .directive('d3Lines',['d3', '$rootScope', function(d3, $rootScope) {
+      .directive('d3Lines',['$rootScope', function($rootScope) {
           return {
             restrict : 'EA',
             scope: {
@@ -90,21 +90,16 @@
                     .on("mouseup", onMouseEnd);
                     
                     // setup variables
-                    var y = d3.scale.linear()
+                    var y = d3.scaleLinear()
                       .domain([-0.15, 0.3])
                       .range([height - margin.top,  0 + margin.bottom]);
-                    var x = d3.scale.linear()
+                    var x = d3.scaleLinear()
                       .domain([0, 0.25])
                       .range([ 0 + margin.left, width - margin.right ]);
 
-                    var xAxis = d3.svg.axis()
-                      .scale(x)
-                      .orient("bottom");
+                    var xAxis = d3.axisBottom(x);
+                    var yAxis = d3.axisLeft(y)
 
-                    var yAxis = d3.svg.axis()
-                      .scale(y)
-                      .orient("left");
-                      
                     // line for units of actual portfolio
                     var g = svg.append("svg:g")
                       .style('stroke', '#F44336')
@@ -409,12 +404,11 @@
                     if (listofTreeMap.children.length == 0) listofTreeMap.children.push({"name" : "", "children" : []});
 
                     if (listofTreeMap.children.length > 0){
-                      //  variables for SVG size
+	                    //  variables for SVG size
                       var width = window.innerWidth;
                       var height = 500;
                       var margin = {top: 20, right: 40, bottom: 40, left: 40};
-                      
-                      var color = d3.scale.category20c();
+                      var color = d3.scaleOrdinal(d3.schemeCategory20c);
 
                       if (width >= 1280){
                         document.getElementById("tree_house").style.height = "160px";
@@ -432,41 +426,52 @@
                       }
                       width = width - margin.right - margin.left;
                       // creating a div to contain line charts.
-                      // color = d3.scale.linear().domain([0,100]).range(['hsla(195, 100%, 50%, 1)','hsla(195, 100%, 31%, 1)']);
-                      var color = d3.scale.category10()
+                      // color = d3.scaleLinear().domain([0,100]).range(['hsla(195, 100%, 50%, 1)','hsla(195, 100%, 31%, 1)']);
+                      var color = d3.scaleOrdinal(d3.schemeCategory10);
 
-                      var treemap = d3.layout.treemap()
-                            .size([width,height])
-                            .sticky(true)
-                            .value(function(d) { return d.size; });
+                      var treemap = d3.treemap()
+                        .size([width,height]);
 
-                      var div = d3.select(id).append("div")
+	                    const root = d3.hierarchy(listofTreeMap, (d) => d.children)
+		                    .sum((d) => d.size);
+	                    const tree = treemap(root);
+
+	                    var div = d3.select(id).append("div")
                             .attr('class', 'data-treegraph')
                             .style("position", "relative")
                             .style("width", (width) + "px")
                             .style("height", (height) + "px")
                             .style("left", "15px")
                             .style("top", "10px");
-
-                      var node = div.datum(listofTreeMap).selectAll(".node")
-                          .data(treemap.nodes)
-                        .enter().append("div")
+                      var node = div.datum(root ).selectAll(".node")
+                          .data(tree.leaves())
+                          .enter()
+                          .append("div")
                           .attr("class", "node")
                           .call(position)
                           .style("background", function(d,i) { return d.children ? color(i) : null; })
                           .text(function(d) { return d.children ? null : d.name; });
 
-                        node.data(treemap.value(function(d) { return d.size; }).nodes)
-                          .transition()
-                            .duration(1500)
-                            .call(position);
+                        // TODO: check if it works correctly
+                        // node.data(treemap(root).leaves())
+                        //   .transition()
+                        //     .duration(1500)
+                        //     .call(position);
 
-                      function position() {
-                            this.style("left", function(d) { return d.x + "px"; })
-                                .style("top", function(d) { return d.y + "px"; })
-                                .style("width", function(d) { return Math.max(0, d.dx - 1) + "px"; })
-                                .style("height", function(d) { return Math.max(0, d.dy - 1) + "px"; });
-                          }
+	                    function position(node) {
+		                    node.style("left", function (d) {
+			                    return d.x + "px";
+		                    })
+			                    .style("top", function (d) {
+				                    return d.y + "px";
+			                    })
+			                    .style("width", function (d) {
+				                    return Math.max(0, d.dx - 1) + "px";
+			                    })
+			                    .style("height", function (d) {
+				                    return Math.max(0, d.dy - 1) + "px";
+			                    });
+	                    }
 
                       d3.selectAll('.node').on('mouseover',function(){
                         d3.select(this).style('box-shadow','3px 0px 30px #fff');
@@ -475,8 +480,6 @@
                         d3.select(this).style('box-shadow','none');
                       });
                     }
-
-                    
 
                     // line for units of actual portfolio
                     // var g = svg.append("svg:g")
@@ -536,25 +539,23 @@
                       .attr('height',	height)
                       .attr('class', 'data-graph')
                   // setup variables
-                      var y = d3.scale.linear()
+                      var y = d3.scaleLinear()
                         .domain(d3.extent(data.concat($rootScope.arrOtherPortfolio)))
                         .range([ 0 + margin.bottom, height - margin.top ]);
-                      var x = d3.time.scale()
+                      var x = d3.scaleTime()
                         .domain(d3.extent(scope.datadate))
                         .range([ 0 + margin.left, width - margin.right ]);
-                      var xi = d3.time.scale()
+                      var xi = d3.scaleTime()
                         .domain(d3.extent(scope.datadate))
                         .range([0, data.length]);
-                      var xAxis = d3.svg.axis()
-                        .orient("bottom")
-                        .scale(x)
-                        .tickFormat(d3.time.format('%m-%y'));
+                      var xAxis = d3.axisBottom(x)
+                        .tickFormat(d3.timeFormat('%m-%y'));
 
                       // line of gain or loss in portfolio   
                       var g = svg.append("svg:g")
                         .style('stroke', '#F44336')
                         .style('fill', 'none');
-                      var lineGraph = d3.svg.line()
+                      var lineGraph = d3.line()
                         .x(function(d, i) {return x(scope.datadate[i]);})
                         .y(function(d) {return height - y(d);});
                       // line chart path
@@ -567,12 +568,10 @@
                       // tooltip for gain or loss of portfolio
                       // vertical line
                       var verticalLine = svg.append('line')
-                        .attr({
-                            'x1': 0,
-                            'y1': 8,
-                            'x2': 0,
-                            'y2': height,
-                        })
+                        .attr('x1', 0)
+                        .attr('y1', 8)
+                        .attr('x2', 0)
+                        .attr('y2', height)
                         .attr("stroke", "black")
                         .attr('class', 'verticalLine')
                         .style('stroke-width', 2);
@@ -661,23 +660,21 @@
                       .attr('height',	height)
                       .attr('class', 'data-graph')
                   // setup variables
-                      var y = d3.scale.linear()
+                      var y = d3.scaleLinear()
                         .domain(d3.extent(data))
                         .range([ 0 + margin.bottom, height - margin.top ]);
-                      var x = d3.time.scale()
+                      var x = d3.scaleTime()
                         .domain(d3.extent(scope.datadate))
                         .range([ 0 + margin.left, width - margin.right ]);
-                      var xi = d3.time.scale()
+                      var xi = d3.scaleTime()
                         .domain(d3.extent(scope.datadate))
                         .range([0, data.length]);
-                      var xAxis = d3.svg.axis()
-                        .orient("bottom")
-                        .scale(x)
-                        .tickFormat(d3.time.format('%m-%y'));
+                      var xAxis = d3.axisBottom(x)
+                        .tickFormat(d3.timeFormat('%m-%y'));
                       var g = svg.append("svg:g")
                         .style('stroke', '#9E9E9E')
                         .style('fill', 'none');
-                      var lineGraph = d3.svg.line()
+                      var lineGraph = d3.line()
                         .x(function(d, i) {return x(scope.datadate[i]);})
                         .y(function(d) {return height - y(d);});
                   // fund line chart path
@@ -688,15 +685,13 @@
                         .style('fill', 'none');
                       // tooltip
                       var verticalLine = svg.append('line')
-                        .attr({
-                            'x1': 0,
-                            'y1': 8,
-                            'x2': 0,
-                            'y2': height - 8
-                        })
-                        .attr("stroke", "black")
-                        .attr('class', 'line_exvline')
-                        .style('stroke-width', 2);
+                        .attr('x1', 0)
+                        .attr('y1', 8)
+                        .attr('x2', 0)
+                        .attr('y2', height - 8)
+	                      .attr("stroke", "black")
+	                      .attr('class', 'line_exvline')
+	                      .style('stroke-width', 2);
                       // tooltip value
                       var toolTipValue = svg.append('text')
                         .text(function(d) { return "" })
