@@ -401,7 +401,7 @@
                       listofTreeMap.children.push(eachTree);
                     }
 
-                    if (listofTreeMap.children.length == 0) listofTreeMap.children.push({"name" : "", "children" : []});
+                    if (listofTreeMap.children.length == 0) listofTreeMap.children.push({"name" : "", "size": 1, "children": []});
 
                     if (listofTreeMap.children.length > 0){
 	                    //  variables for SVG size
@@ -443,35 +443,25 @@
                             .style("height", (height) + "px")
                             .style("left", "15px")
                             .style("top", "10px");
-                      var node = div.datum(root ).selectAll(".node")
-                          .data(tree.leaves())
-                          .enter()
-                          .append("div")
-                          .attr("class", "node")
-                          .call(position)
-                          .style("background", function(d,i) { return d.children ? color(i) : null; })
-                          .text(function(d) { return d.children ? null : d.name; });
+	                    var node = div.datum(root).selectAll(".node")
+		                    .data(tree.leaves())
+		                    .enter()
+		                    .append("div")
+		                    .attr("class", "node")
+		                     .style("left", (d) => d.x0 + "px")
+		                     .style("top", (d) => d.y0 + "px")
+		                     .style("width", (d) => Math.max(0, d.x1 - d.x0 - 1) + "px")
+		                     .style("height", (d) => Math.max(0, d.y1 - d.y0  - 1) + "px")
+                         .style("background", function(d,i) { return color(i) })
+                         .text(function(d) { return d.children ? null : d.name; });
 
-                        // TODO: check if it works correctly
-                        // node.data(treemap(root).leaves())
-                        //   .transition()
-                        //     .duration(1500)
-                        //     .call(position);
-
-	                    function position(node) {
-		                    node.style("left", function (d) {
-			                    return d.x + "px";
-		                    })
-			                    .style("top", function (d) {
-				                    return d.y + "px";
-			                    })
-			                    .style("width", function (d) {
-				                    return Math.max(0, d.dx - 1) + "px";
-			                    })
-			                    .style("height", function (d) {
-				                    return Math.max(0, d.dy - 1) + "px";
-			                    });
-	                    }
+                        node.data(treemap(root).leaves())
+                          .transition()
+                            .duration(1500)
+                            .style("left", (d) => d.x0 + "px")
+                            .style("top", (d) => d.y0 + "px")
+                            .style("width", (d) => Math.max(0, d.x1 - d.x0 - 1) + "px")
+                            .style("height", (d) => Math.max(0, d.y1 - d.y0  - 1) + "px");
 
                       d3.selectAll('.node').on('mouseover',function(){
                         d3.select(this).style('box-shadow','3px 0px 30px #fff');
