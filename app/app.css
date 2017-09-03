@@ -211,3 +211,31 @@ md-input-container label{
 .md-subcontent {
     height: 160px;
 }
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.bar {
+  fill: #ff7f0e;
+}
+
+.bar:hover {
+  fill: #ff6f31;
+}
+
+.x.axis path {
+  /*display: none;*/
+}
+
+.x.axis .tick text {
+    font-size: 8px;
+}
+
+.x.axis .tick line,
+.x.axis path {
+    stroke: #f44336;
+}

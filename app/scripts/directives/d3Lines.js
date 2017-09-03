@@ -14,10 +14,11 @@
                 $rootScope.curSlider = 0;
                 $rootScope.curDateIndex = 0;
 
-                $rootScope.$watch('strDrawStart', function(newVals, oldVals) {                  
+                $rootScope.$watch('strDrawStart', function(newVals, oldVals) {
                   if (newVals == "draw"){
                     scope.render();
                     scope.renderScatter();
+                    scope.renderHisogram();
                     scope.renderTree();
                     $rootScope.strDrawStart = "none";
                   }
@@ -26,13 +27,15 @@
                 scope.$watch('sdate', function(value) {
                   if (value != undefined){
                     scope.renderScatter();
+                    scope.renderHisogram();
                     scope.renderTree();
-                  }                        
+                  }
                 });
 
-                window.addEventListener('resize', function() {                
+                window.addEventListener('resize', function() {
                   scope.render();
                   scope.renderScatter();
+                  scope.renderHisogram();
                   scope.renderTree();
                 });
             // define render function
@@ -60,6 +63,8 @@
                       }
                       x_Day7LossMin[i] = 0-min;
                     }
+                    scope.day91ReturnFunds = angular.copy(y_Day91Return);
+
                     // calculate for portfolio
                     for (var i = 0; i < $rootScope.listofOtherPortfolio.length; i ++){
                       if ($rootScope.listofOtherPortfolio[i] == undefined) continue;
@@ -507,6 +512,121 @@
                   }
                 }
 
+                scope.renderHisogram = function(data){
+                  var histogramData = [];
+                  var histogramRange = ['-0.10', '-0.05', '0.00', '0.05', '0.10', '0.15', '0.20', '0.25'];
+                  histogramData.push({label:"", value:0});
+                  for (var i = 0; i < histogramRange.length; i++) {
+                    histogramData.push({label:histogramRange[i], value:0});
+                  }
+                  histogramData.push({label:" ", value:0});
+
+                  for (var i = 0; i < histogramRange.length + 1; i++) {
+                      for (var j = 0; j < scope.day91ReturnFunds.length; j++) {
+                          if (i === 0) {
+                              if ( scope.day91ReturnFunds[j] < parseFloat(histogramRange[i]) ) {
+                                histogramData[i].value += 1;
+                              }
+                          }
+                          else if (i == histogramRange.length) {
+                              if ( scope.day91ReturnFunds[j] >= parseFloat(histogramRange[i-1]) ) {
+                                  histogramData[i].value += 1;
+                              }
+                          }
+                          else {
+                              if ( scope.day91ReturnFunds[j] < parseFloat(histogramRange[i]) && scope.day91ReturnFunds[j] >= parseFloat(histogramRange[i-1]) ) {
+                                  histogramData[i].value += 1;
+                              }
+                          }
+                      }
+                  }
+                  
+                  var histogram = new drawHistogram(histogramData, histogramRange, '#histogram');
+
+                  function drawHistogram(data, datadate, id){
+                    var elements = document.querySelectorAll('.data-histogram');
+                    elements.forEach(function (element) {
+                      element.parentNode.removeChild(element);
+                    });
+             
+                     if (data && data.length > 0) { 
+                      var width = window.innerWidth;
+                      var height = 140;
+                      var margin = {top: 10, right: 20, bottom: 20, left: 20};
+                      if (window.innerWidth >= 1280) {
+                        width = window.innerWidth / 100 * 25 - margin.left - margin.right;
+                      }
+                      else {
+                        margin.right = 50;
+                        width = window.innerWidth - margin.left - margin.right;
+                      }
+
+                      width = width - 16 * 2; // card content
+                      var formatPercent = d3.format(".0%");
+
+                      var x = d3.scale.ordinal()
+                          .rangeRoundBands([0, width], .0);
+
+                      var y = d3.scale.linear()
+                          .range([height, 0]);
+
+                      var xAxis = d3.svg.axis()
+                          .scale(x)
+                          .orient("bottom");
+
+                      var yAxis = d3.svg.axis()
+                          .scale(y)
+                          .orient("left")
+                          .tickFormat(formatPercent);
+
+                      // var tip = d3.tip()
+                      //   .attr('class', 'd3-tip')
+                      //   .offset([-10, 0])
+                      //   .html(function(d) {
+                      //     return "<strong>value:</strong> <span style='color:red'>" + d.value + "</span>";
+                      //   })
+
+                      d3.select(id + " svg").remove();
+                      var svg = d3.select(id).append("svg:svg")
+                          .attr('class', 'data-histogram')
+                          .attr("width", width + margin.left + margin.right)
+                          .attr("height", height + margin.top + margin.bottom)
+                        .append("g")
+                          .attr('class', 'chart-area')
+                          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                      // svg.call(tip);
+
+                      x.domain(data.map(function(d) { return d.label; }));
+                      y.domain([0, d3.max(data, function(d) { return d.value; })]);
+                      
+                      var bars = svg.selectAll(".bar")
+                          .data(data)
+                        .enter().append("rect")
+                          .attr("class", "bar")
+                          .attr("x", function(d) { return x(d.label) - x.rangeBand()/2 ; })
+                          .attr("width", x.rangeBand())
+                          .attr("y", function(d) { return y(d.value || 0); })
+                          .attr("height", function(d) { return height - y(d.value||0); })
+                          // .on('mouseover', tip.show)
+                          // .on('mouseout', tip.hide)
+
+                      var xAxisTopMargin = 5;
+                      var xAxisLeftMargin = 5;
+
+                      var g = svg.append("g")
+                          .attr("class", "x axis")
+                          .attr("transform", "translate(0," + (height + xAxisTopMargin) + ")")
+                          .call(xAxis);
+
+                      var d = g.select("path").attr("d");
+                      var d2 = d.slice(0, 3) + 0 + d.slice(4, d.length-1) + 0;
+                      g.select("path").attr("d", d2);
+                    }
+                  }
+
+                };
+
                 scope.render = function(data) {
                   // Remove any existing graph
                   var elements = document.querySelectorAll('.data-graph');
@@ -525,7 +645,7 @@
                       var width = window.innerWidth;
                       var height = 150;
                       var margin = {top: 20, right: 11, bottom: 20, left: 10};
-                      if (window.innerWidth >= 1280) width = window.innerWidth / 100 * 50 - margin.left - margin.right;
+                      if (window.innerWidth >= 1280) width = window.innerWidth / 100 * 25 - margin.left - margin.right;
                       else width = window.innerWidth - margin.left - margin.right;
 
                       width = width - 16 * 2; // card content
@@ -649,7 +769,7 @@
                       var width = window.innerWidth;
                       var height = 150;
                       var margin = {top: 20, right: 11, bottom: 20, left: 10};
-                      if (window.innerWidth >= 1280) width = window.innerWidth / 100 * 50 - margin.left - margin.right;
+                      if (window.innerWidth >= 1280) width = window.innerWidth / 100 * 25 - margin.left - margin.right;
                       else width = window.innerWidth - margin.left - margin.right;
 
                       width = width - 16 * 2; // card content
