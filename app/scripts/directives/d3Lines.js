@@ -54,13 +54,13 @@
                               }
                           }
                           else if (i == histogramRange.length) {
-                              if ( day91ReturnPortfolio[k] >= parseFloat(histogramRange[i-1]) ) {
+                              if (day91ReturnPortfolio[k] >= parseFloat(histogramRange[i-1]) ) {
                                   dataMask[i] += 1;
                                   break;
                               }
                           }
                           else {
-                              if ( day91ReturnPortfolio[k] < parseFloat(histogramRange[i]) && day91ReturnPortfolio[k] >= parseFloat(histogramRange[i-1]) ) {
+                              if (  day91ReturnPortfolio[k] !== 0 && day91ReturnPortfolio[k] < parseFloat(histogramRange[i]) && day91ReturnPortfolio[k] >= parseFloat(histogramRange[i-1]) ) {
                                   dataMask[i] += 1;
                                   break;
                               }
