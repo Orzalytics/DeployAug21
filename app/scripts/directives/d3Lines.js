@@ -13,6 +13,7 @@
                 // initialize current slider value
                 $rootScope.curSlider = 0;
                 $rootScope.curDateIndex = 0;
+                $rootScope.receivedDataFlag = false;
 
                 $rootScope.$watch('strDrawStart', function(newVals, oldVals) {
                   if (newVals == "draw"){
@@ -38,6 +39,37 @@
                   scope.renderHisogram();
                   scope.renderTree();
                 });
+
+                function preparePortfolioHistogramData(day91ReturnPortfolio) {
+                  scope.portfolioHistogramData = [];
+                  var histogramRange = ['-0.10', '-0.05', '0.00', '0.05', '0.10', '0.15', '0.20', '0.25'];
+                  var dataMask = [0,0,0,0,0,0,0,0,0];
+
+                  for (var k = 0; k < day91ReturnPortfolio.length; k++) {
+                      for (var i = 0; i < histogramRange.length + 1; i++) {
+                          if (i === 0) {
+                              if ( day91ReturnPortfolio[k] < parseFloat(histogramRange[i]) ) {
+                                dataMask[i] += 1;
+                                break;
+                              }
+                          }
+                          else if (i == histogramRange.length) {
+                              if ( day91ReturnPortfolio[k] >= parseFloat(histogramRange[i-1]) ) {
+                                  dataMask[i] += 1;
+                                  break;
+                              }
+                          }
+                          else {
+                              if ( day91ReturnPortfolio[k] < parseFloat(histogramRange[i]) && day91ReturnPortfolio[k] >= parseFloat(histogramRange[i-1]) ) {
+                                  dataMask[i] += 1;
+                                  break;
+                              }
+                          }
+                      }
+                      scope.portfolioHistogramData.push(angular.copy(dataMask));
+                  }
+                }
+
             // define render function
                 scope.renderScatter = function(data){
 
@@ -69,6 +101,11 @@
                     for (var i = 0; i < $rootScope.listofOtherPortfolio.length; i ++){
                       if ($rootScope.listofOtherPortfolio[i] == undefined) continue;
                       y_Day91Return.push($rootScope.listofOtherPortfolio[i].day91Array[$rootScope.sliderIndex]);
+                      if (!$rootScope.receivedDataFlag) {
+                        preparePortfolioHistogramData($rootScope.listofOtherPortfolio[i].day91Array);
+                        $rootScope.receivedDataFlag = true;
+                      }
+
                       var min = 99999;
                       for (var j = 0; j <= $rootScope.sliderIndex; j ++){
                         if (min > $rootScope.listofOtherPortfolio[i].day7Array[j]) min = $rootScope.listofOtherPortfolio[i].day7Array[j];
@@ -134,7 +171,7 @@
                         .attr("width", width - margin.left - margin.right + 16)
                         .attr("height", height - margin.top - margin.bottom + 16);
 
-                    d3.selectAll(".tick > text")
+                    d3.selectAll(".data-scattergraph .tick > text")
                         .style("font-size", "12px");
 
                     d3.selectAll(".x_axis > path")
@@ -513,118 +550,105 @@
                 }
 
                 scope.renderHisogram = function(data){
-                  var histogramData = [];
-                  var histogramRange = ['-0.10', '-0.05', '0.00', '0.05', '0.10', '0.15', '0.20', '0.25'];
-                  histogramData.push({label:"", value:0});
-                  for (var i = 0; i < histogramRange.length; i++) {
-                    histogramData.push({label:histogramRange[i], value:0});
-                  }
-                  histogramData.push({label:" ", value:0});
+                  if (scope.portfolioHistogramData && scope.portfolioHistogramData.length) {
+                    var histogramData = [];
+                    var histogramRange = ['-0.10', '-0.05', '0.00', '0.05', '0.10', '0.15', '0.20', '0.25'];
 
-                  for (var i = 0; i < histogramRange.length + 1; i++) {
-                      for (var j = 0; j < scope.day91ReturnFunds.length; j++) {
-                          if (i === 0) {
-                              if ( scope.day91ReturnFunds[j] < parseFloat(histogramRange[i]) ) {
-                                histogramData[i].value += 1;
-                              }
-                          }
-                          else if (i == histogramRange.length) {
-                              if ( scope.day91ReturnFunds[j] >= parseFloat(histogramRange[i-1]) ) {
-                                  histogramData[i].value += 1;
-                              }
-                          }
-                          else {
-                              if ( scope.day91ReturnFunds[j] < parseFloat(histogramRange[i]) && scope.day91ReturnFunds[j] >= parseFloat(histogramRange[i-1]) ) {
-                                  histogramData[i].value += 1;
-                              }
-                          }
-                      }
-                  }
-                  
-                  var histogram = new drawHistogram(histogramData, histogramRange, '#histogram');
-
-                  function drawHistogram(data, datadate, id){
-                    var elements = document.querySelectorAll('.data-histogram');
-                    elements.forEach(function (element) {
-                      element.parentNode.removeChild(element);
-                    });
-             
-                     if (data && data.length > 0) { 
-                      var width = window.innerWidth;
-                      var height = 140;
-                      var margin = {top: 10, right: 20, bottom: 20, left: 20};
-                      if (window.innerWidth >= 1280) {
-                        width = window.innerWidth / 100 * 25 - margin.left - margin.right;
-                      }
-                      else {
-                        margin.right = 50;
-                        width = window.innerWidth - margin.left - margin.right;
-                      }
-
-                      width = width - 16 * 2; // card content
-                      var formatPercent = d3.format(".0%");
-
-                      var x = d3.scale.ordinal()
-                          .rangeRoundBands([0, width], .0);
-
-                      var y = d3.scale.linear()
-                          .range([height, 0]);
-
-                      var xAxis = d3.svg.axis()
-                          .scale(x)
-                          .orient("bottom");
-
-                      var yAxis = d3.svg.axis()
-                          .scale(y)
-                          .orient("left")
-                          .tickFormat(formatPercent);
-
-                      // var tip = d3.tip()
-                      //   .attr('class', 'd3-tip')
-                      //   .offset([-10, 0])
-                      //   .html(function(d) {
-                      //     return "<strong>value:</strong> <span style='color:red'>" + d.value + "</span>";
-                      //   })
-
-                      d3.select(id + " svg").remove();
-                      var svg = d3.select(id).append("svg:svg")
-                          .attr('class', 'data-histogram')
-                          .attr("width", width + margin.left + margin.right)
-                          .attr("height", height + margin.top + margin.bottom)
-                        .append("g")
-                          .attr('class', 'chart-area')
-                          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-                      // svg.call(tip);
-
-                      x.domain(data.map(function(d) { return d.label; }));
-                      y.domain([0, d3.max(data, function(d) { return d.value; })]);
-                      
-                      var bars = svg.selectAll(".bar")
-                          .data(data)
-                        .enter().append("rect")
-                          .attr("class", "bar")
-                          .attr("x", function(d) { return x(d.label) - x.rangeBand()/2 ; })
-                          .attr("width", x.rangeBand())
-                          .attr("y", function(d) { return y(d.value || 0); })
-                          .attr("height", function(d) { return height - y(d.value||0); })
-                          // .on('mouseover', tip.show)
-                          // .on('mouseout', tip.hide)
-
-                      var xAxisTopMargin = 5;
-                      var xAxisLeftMargin = 5;
-
-                      var g = svg.append("g")
-                          .attr("class", "x axis")
-                          .attr("transform", "translate(0," + (height + xAxisTopMargin) + ")")
-                          .call(xAxis);
-
-                      var d = g.select("path").attr("d");
-                      var d2 = d.slice(0, 3) + 0 + d.slice(4, d.length-1) + 0;
-                      g.select("path").attr("d", d2);
+                    histogramData.push({label:"", value:0});
+                    for (var i = 0; i < histogramRange.length; i++) {
+                      histogramData.push({label:histogramRange[i], value:0});
                     }
-                  }
+                    histogramData.push({label:" ", value:0});
 
+                    for (var i = 0; i < scope.portfolioHistogramData[$rootScope.sliderIndex].length; i++) {
+                      histogramData[i+1].value = scope.portfolioHistogramData[$rootScope.sliderIndex][i];
+                    }
+
+                    var histogram = new drawHistogram(histogramData, histogramRange, '#histogram');
+
+                    function drawHistogram(data, datadate, id){
+                      var elements = document.querySelectorAll('.data-histogram');
+                      elements.forEach(function (element) {
+                        element.parentNode.removeChild(element);
+                      });
+               
+                       if (data && data.length > 0) { 
+                        var width = window.innerWidth;
+                        var height = 140;
+                        var margin = {top: 10, right: 20, bottom: 20, left: 20};
+                        if (window.innerWidth >= 1280) {
+                          width = window.innerWidth / 100 * 25 - margin.left - margin.right;
+                        }
+                        else {
+                          margin.right = 50;
+                          width = window.innerWidth - margin.left - margin.right;
+                        }
+
+                        width = width - 16 * 2; // card content
+                        var formatPercent = d3.format(".0%");
+
+                        var x = d3.scale.ordinal()
+                            .rangeRoundBands([0, width], .0);
+
+                        var y = d3.scale.linear()
+                            .range([height, 0]);
+
+                        var xAxis = d3.svg.axis()
+                            .scale(x)
+                            .orient("bottom");
+
+                        var yAxis = d3.svg.axis()
+                            .scale(y)
+                            .orient("left")
+                            .tickFormat(formatPercent);
+
+                        // var tip = d3.tip()
+                        //   .attr('class', 'd3-tip')
+                        //   .offset([-10, 0])
+                        //   .html(function(d) {
+                        //     return "<strong>value:</strong> <span style='color:red'>" + d.value + "</span>";
+                        //   })
+
+                        d3.select(id + " svg").remove();
+                        var svg = d3.select(id).append("svg:svg")
+                            .attr('class', 'data-histogram')
+                            .attr("width", width + margin.left + margin.right)
+                            .attr("height", height + margin.top + margin.bottom)
+                          .append("g")
+                            .attr('class', 'chart-area')
+                            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                        // svg.call(tip);
+
+                        x.domain(data.map(function(d) { return d.label; }));
+                        y.domain([0, d3.max(data, function(d) { return d.value; })]);
+                        
+                        var bars = svg.selectAll(".bar")
+                            .data(data)
+                          .enter().append("rect")
+                            .attr("class", "bar")
+                            .attr("x", function(d) { return x(d.label) - x.rangeBand()/2 ; })
+                            .attr("width", x.rangeBand())
+                            .attr("y", function(d) { return y(d.value || 0); })
+                            .attr("height", function(d) { return height - y(d.value||0); })
+                            // .on('mouseover', tip.show)
+                            // .on('mouseout', tip.hide)
+
+                        var xAxisTopMargin = 5;
+                        var xAxisLeftMargin = 5;
+
+                        var g = svg.append("g")
+                            .attr("class", "x axis")
+                            .attr("transform", "translate(0," + (height + xAxisTopMargin) + ")")
+                            .call(xAxis);
+
+                        var d = g.select("path").attr("d");
+                        var d2 = d.slice(0, 3) + 0 + d.slice(4, d.length-1) + 0;
+                        g.select("path").attr("d", d2);
+                      }
+                    }
+
+                  }
                 };
 
                 scope.render = function(data) {
