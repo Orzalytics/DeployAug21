@@ -1,7 +1,31 @@
+body {
+    background-color: #f2f2fc;
+}
 main{
     margin-bottom : 64px;
+    background-color: #f2f2fc;
 }
 
+md-card {
+    box-shadow: none;
+    border: 1px solid #d8d7dc;
+    border-radius: 5px;
+    padding: 16px;
+}
+
+md-card md-card-title {
+    border-bottom : 1px solid #b7d0cd;
+    padding: 8px 0;
+    padding-bottom: 16px;
+}
+
+md-card md-card-content {
+    padding: 0;
+}
+
+.md-headline {
+    font-size: 20px;
+}
 .md-toolbar-bottom{
     position : fixed;
     bottom : 0px;
@@ -195,6 +219,39 @@ md-input-container label{
     color: #ff6f31;
 }
 
+
+.bar_tooltip{
+    font-size: 12px;
+    position : absolute;
+    border : 2px solid #00aad5;
+    border-radius : 5px;
+    background-color: rgba(255, 255, 255, 0.6);
+    padding : 5px;
+    display: none;
+}
+
+.bar_tooltip:after {
+  box-sizing: border-box;
+  display: inline;
+  font-size: 12px;
+  width: 100%;
+  line-height: 1;
+  color: #00aad5;
+  content: "\25BC";
+  position: absolute;
+  text-align: center;
+  margin: -2px 0 0 0;
+  top: 100%;
+  left: 0;
+}
+.bar {
+    transition: all 0.3s ease;
+    fill: rgba(1, 147, 147, 0.6);
+}
+.bar:hover {
+  fill: rgba(1, 147, 147, 1);
+}
+
 .node {
     border: solid 1px white;
     font: 14px sans-serif;
@@ -210,4 +267,5 @@ md-input-container label{
 }
 .md-subcontent {
     height: 160px;
+    position: relative;
 }

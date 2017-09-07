@@ -85,6 +85,14 @@
       // Resize slider width same as graph width
       $scope.arr.SliderStyle = (window.innerWidth - 180) +'px';
 
+      Array.prototype.max = function() {
+        return Math.max.apply(null, this);
+      };
+
+      Array.prototype.min = function() {
+        return Math.min.apply(null, this);
+      };
+
       window.addEventListener('resize', function() {                
         document.getElementById("date-slider").style.width = (window.innerWidth - 180) +'px';
         $scope.resetTable();
@@ -224,8 +232,6 @@
         for (var i = 0; i < $rootScope.listofOtherPortfolio.length; i ++){          
           if ($rootScope.listofOtherPortfolio[i].portname == $scope.arr.username){
             $scope.ngScopeRateArray = angular.copy($rootScope.listofOtherPortfolio[i].yearRateArray);
-            // console.log($scope.arr.username + ":" + $rootScope.listofOtherPortfolio[i].portname);
-            // console.log($rootScope.listofOtherPortfolio);
             break;
           }
         }
@@ -256,6 +262,7 @@
           }
         }
       };
+
       // Init slider controll and get current selected index
       // In this function, we can get index of array following slider position
       $scope.InitSlider = function(){
@@ -283,6 +290,8 @@
               $scope.arr.ngSecondGraphMount = $rootScope.roundDown($rootScope.multiple($rootScope.arrPurchase[$rootScope.m_nSelIndex][value], $rootScope.listOfPriceFund[$rootScope.m_nSelIndex].u[value]), 6);
 
               $scope.updateStatistics();
+              $scope.updatePortHistogram();
+              $scope.updateReturnRisk();
               // $scope.updateSlider();
             }
         })
@@ -388,7 +397,44 @@
         $rootScope.strDrawStart = "draw";
         $scope.arr.ngScopeUploadVisible = ($scope.arr.tableInfo == undefined) ? false : ($scope.arr.tableInfo.length > 0) ? false : true;
         $scope.arr.ngScopeUploadVisible = ($scope.arr.username == "") ? false : $scope.arr.ngScopeUploadVisible;
+        $scope.updateReturnRisk();
       };
+
+      $scope.updateReturnRisk = function () {
+        console.log('rootScope', $rootScope);
+        console.log('selectedFunds', $scope.arr.selectedFunds);
+
+        for (var i = 0; i < $rootScope.listOfPriceFund.length; i ++) {
+          var fundData = $rootScope.listOfPriceFund[i];
+          if (fundData.name != $scope.arr.selectedFunds)
+            continue;
+
+          var dayRetData = $rootScope.dayRetData;
+          var day91_return = dayRetData.day91_return[i];
+          var day7_loss = dayRetData.day7_loss[i];
+
+          var min = 99999;
+          var firstValidIndex = -1;
+
+          var y_Day91Return = [];
+          var x_Day7LossMin = [];
+
+          for (var j = 0; j <= $rootScope.sliderIndex; j ++){
+            if (min > day7_loss[j]) min = day7_loss[j];
+            if ((day91_return[j] != 0 || day7_loss[j] != 0) && firstValidIndex < 0) {
+              firstValidIndex = j;
+            }
+            if (firstValidIndex >= 0 && ((j - firstValidIndex) % 7 == 0)) {
+              y_Day91Return.push(day91_return[j]);
+              x_Day7LossMin.push(min);
+            }
+          }
+
+          console.log(y_Day91Return);
+          console.log(x_Day7LossMin);
+
+        }
+      }
 
       $scope.GetFundIndex = function(strFundName){
         for (var i = 0; i < $rootScope.listOfPriceFund.length; i ++){
@@ -537,9 +583,12 @@
 
       $scope.refreshGraph = function(){
         $scope.drawFirstGraph();
+        $rootScope.port91DayHistogram.portIndex = -1;
         for (var i = 0; i < $scope.arr.tableInfo.length; i ++){
           if ($scope.arr.tableInfo[i].Portname != $scope.arr.username) continue;
-
+          $rootScope.port91DayHistogram.name = $scope.arr.username;
+          $rootScope.port91DayHistogram.portIndex = i;
+          
           for (var j = 0; j < $scope.arr.tableInfo[i].Portarray.length; j ++){
             var nFundIndex = $scope.GetFundIndex($scope.arr.tableInfo[i].Portarray[j].strFundName);
             var nCount = $scope.arr.tableInfo[i].Portarray[j].nItemCnt;
@@ -550,10 +599,52 @@
             
             $scope.calculateItemCount();
             $scope.drawSecondGraph(nFundIndex, nCount, nDateIndex);
-          }        
+          }
           $scope.drawFirstGraph();
+          $scope.updatePortHistogram();
         }
       }
+
+      $scope.updatePortHistogram = function () {
+        var portIndex = $rootScope.port91DayHistogram.portIndex;
+        $rootScope.port91DayHistogram.data = [
+          {range: -0.15, value: 0},
+          {range: -0.10, value: 0},
+          {range: -0.05, value: 0},
+          {range: 0, value: 0},
+          {range: 0.05, value: 0},
+          {range: 0.1, value: 0},
+          {range: 0.15, value: 0},
+          {range: 0.2, value: 0},
+          {range: 0.25, value: 0}
+        ];
+
+        $rootScope.port91DayHistogram.maxValue = 10;
+        if (portIndex == -1) {
+          $rootScope.port91DayHistogram.name = '';
+        } else {
+          var otherPortfolioData = $rootScope.listofOtherPortfolio[portIndex].day91Array;
+          var firstValidIndex = -1;
+          for (var j = 0; j <= $rootScope.sliderIndex; j ++) {
+            var portValue = otherPortfolioData[j];
+            if (portValue != 0 && firstValidIndex < 0) {
+              firstValidIndex = j;
+            }
+
+            if (firstValidIndex >= 0) {
+              var histoIndex = parseInt((portValue + 0.15) / 0.05);
+              $rootScope.port91DayHistogram.data[histoIndex].value = $rootScope.port91DayHistogram.data[histoIndex].value + 1;
+            }
+          }
+          for (var j = 0; j < $rootScope.port91DayHistogram.data.length; j ++) {
+            if ($rootScope.port91DayHistogram.data[j].value + 1 > $rootScope.port91DayHistogram.maxValue)
+              $rootScope.port91DayHistogram.maxValue = $rootScope.port91DayHistogram.data[j].value + 1;
+          }
+        }
+
+        $rootScope.portHistogramStart = 'draw';
+      }
+
       $scope.onTableReorder = function(index){
         var strIconName = $scope.arr.tbHeader[index].icon;
         for (var i = 0; i < $scope.arr.tbHeader.length; i ++){
@@ -642,7 +733,6 @@
           url = url + '/' + buyInfo.nowDate;
         }
         $scope.arr.sliderDisable = false;
-        // console.log(url);          
         $http.get(url).success(function (portdata) {
           $http.get('/userInfo').success(function (portnames){
             $rootScope.listOfPortfolio = portnames;
@@ -914,7 +1004,7 @@
       });
 
       $scope.$watch('arr.username', function (value) {
-          $rootScope.username = $scope.arr.username;   
+          $rootScope.username = $scope.arr.username;
           $scope.initTable();
           $scope.refreshTable();
           $scope.refreshGraph();

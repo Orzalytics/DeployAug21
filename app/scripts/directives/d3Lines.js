@@ -14,7 +14,7 @@
                 $rootScope.curSlider = 0;
                 $rootScope.curDateIndex = 0;
 
-                $rootScope.$watch('strDrawStart', function(newVals, oldVals) {                  
+                $rootScope.$watch('strDrawStart', function(newVals, oldVals) {
                   if (newVals == "draw"){
                     scope.render();
                     scope.renderScatter();
@@ -148,51 +148,6 @@
                         .style('stroke-width', 1)
                         .style('stroke', 'grey')
                         .style("opacity", 0);
-
-
-                    // svg.selectAll(".dot")
-                    //   .data(y_Day91Return)
-                    // .enter().append("rect")
-                    //   .attr("class", "start_year_line")
-                    //   .attr("id", "start_year_line")
-                    //   .attr("x", function(d,i) { return x(x_Day7LossMin[i])-8})
-                    //   .attr("y", function(d,i) { 
-                    //     var yValue = 0;                      
-                    //     if (i >= $rootScope.listOfPriceFund.length){
-                    //       yValue = $rootScope.listofOtherPortfolio[i-$rootScope.listOfPriceFund.length].yearRateArray[$rootScope.sliderIndex];
-                    //     }else{
-                    //       yValue = $rootScope.arrStartReturn[i][$rootScope.sliderIndex];
-                    //     }
-                    //     yValue = yValue / 100;
-                    //     return y(yValue)}
-                    //   )
-                    //   .attr("width", 16)
-                    //   .attr("height", 4)
-                    //   .attr("clip-path", "url(#clip)")
-                    //   .style("fill", function(d, i){
-                    //     var cntFund = $rootScope.listOfPriceFund.length;
-                    //     var isPort = (i < cntFund) ? 0 : 1;
-                    //     var color = d3.rgb(isPort * (100 + 150/(i-cntFund+1)), (100 + 100/(i+1)) * (1-isPort), 0);
-                    //     return color;
-                    //   })
-                    //   .style('stroke-width', 1)
-                    //   .style("opacity", function(d, i){
-                    //     var cntFund = $rootScope.listOfPriceFund.length;
-                    //     if (i >= cntFund){
-                    //       if ($rootScope.listofOtherPortfolio[i - cntFund].showhide == 0) return 0;
-                    //     }
-                    //     return 0.7;
-                    //   })
-                    //   .style("display", function(d, i){
-                    //     var cntFund = $rootScope.listOfPriceFund.length;
-                    //     if (i >= cntFund){
-                    //       if ($rootScope.listofOtherPortfolio[i - cntFund].showhide == 0) return "none";
-                    //     }
-                    //     return "block";
-                    //   })
-                    //   .on("mouseover",  function(d,i) { return onMouseOver(i) })
-                    //   .on("mouseout",  onMouseOut);
-                    
 
                     // Add title
                     svg.selectAll(".dot")
@@ -525,7 +480,7 @@
                       var width = window.innerWidth;
                       var height = 150;
                       var margin = {top: 20, right: 11, bottom: 20, left: 10};
-                      if (window.innerWidth >= 1280) width = window.innerWidth / 100 * 50 - margin.left - margin.right;
+                      if (window.innerWidth >= 1280) width = width / 100 * 25 - margin.left - margin.right;
                       else width = window.innerWidth - margin.left - margin.right;
 
                       width = width - 16 * 2; // card content
@@ -649,7 +604,7 @@
                       var width = window.innerWidth;
                       var height = 150;
                       var margin = {top: 20, right: 11, bottom: 20, left: 10};
-                      if (window.innerWidth >= 1280) width = window.innerWidth / 100 * 50 - margin.left - margin.right;
+                      if (window.innerWidth >= 1280) width = width / 100 * 25 - margin.left - margin.right;
                       else width = window.innerWidth - margin.left - margin.right;
 
                       width = width - 16 * 2; // card content

@@ -61,6 +61,7 @@
 
     // Re-draw graph if the value is "draw"
     $rootScope.strDrawStart = "none";
+    $rootScope.portHistogramStart = 'none';
     // logged user name
     $rootScope.loggedUser = ($rootScope.loginUser != undefined) ? $rootScope.loginUser[0].user_name_saver : "";
     
@@ -71,6 +72,7 @@
     //  arrays of fund names, i.e., for fund 40 it's n[40][0].alias
     var n = []; n.push([]);
     $http.get('/ret1').success(function (fundnames) {
+        console.log(fundnames);
         for (var i = 0; i < fundnames.length; i ++){
             fundnames[i].fund_id_alias_fund = fundnames[i].fund_id_alias_fund * 1;
         }
@@ -81,7 +83,7 @@
 
         // arrays of funds and their calculations
         $http.get('/ret/' + f_startDate).success(function (rows) {
-            // console.log(rows);
+            console.log(rows);
             for (var i = 0; i < rows.length; i ++){
                 rows[i].fund_id_pr_fund = rows[i].fund_id_pr_fund * 1;
                 rows[i].pr_fund = rows[i].pr_fund * 1;
@@ -238,6 +240,22 @@
 
             $rootScope.getFundResult();
             $rootScope.getTransactionData();
+            $rootScope.port91DayHistogram = {
+                name: '',
+                portIndex: -1,
+                data: [
+                    {range: -0.15, value: 0},
+                    {range: -0.10, value: 0},
+                    {range: -0.05, value: 0},
+                    {range: 0, value: 0},
+                    {range: 0.05, value: 0},
+                    {range: 0.1, value: 0},
+                    {range: 0.15, value: 0},
+                    {range: 0.2, value: 0},
+                    {range: 0.25, value: 0}
+                ],
+                maxValue: 10,
+            }
         });
     });
 
@@ -318,6 +336,7 @@
                 // if ($rootScope.listOfPortfolio[i].portfolio_id != "accionescolombia") continue;
                 $rootScope.onChangeUserList($rootScope.listOfPortfolio[i].portfolio_id);
             }
+            console.log('listofOtherPortfolio', $rootScope.listofOtherPortfolio);
         });
     }
     $rootScope.onChangeUserList = function(value){
@@ -371,9 +390,6 @@
                 }
             }
             arrOtherNew999Price[fundIndex][dateIndex] = response[i].nItemCnt;
-            // console.log("index = " + fundIndex);
-            // console.log("date index = " + dateIndex);
-            // console.log(response[i]);
         }
 
         for (var i = 0; i < arrOtherNew999Price.length; i ++){
@@ -443,7 +459,6 @@
                         sum = 1;
                     }else{
                         for (var j = 0; j < $rootScope.listOfPriceFund.length; j ++){
-                            // console.log("p1 : " + arrOtherIndex[j][i] + " p2 : " + arrOtherWeight[j][i-1] + " p3 : " + indexTmpArray[indexTmpArray.length - 1]);
                             sum = sum + arrOtherIndex[j][i] * arrOtherWeight[j][i-1] * indexTmpArray[indexTmpArray.length - 1];
                         }
                     }
@@ -454,9 +469,6 @@
             indexTmpArray.push(sum);
             indexArray.push(sum);
         }
-
-        // console.log(indexArray);
-        // console.log(arrOtherWeight);
 
         // calculate days from total
         var daysArray = [];
@@ -482,16 +494,6 @@
             yearRateArray[i] = (yearRateArray[i] * 100).toFixed(2);
             if (yearRateArray[i] == "-0.00") yearRateArray[i] = "0.00";
         }
-
-        // console.log(arrOtherStaircase);
-        // console.log(indexArray);
-        // console.log(arrOtherWeight);
-        // console.log(arrOtherIndex);
-
-        // for (var i = 0; i < indexArray.length; i ++){
-        //     console.log((i+3) + " : " + arrOtherIndex[3][i] + " : " + arrOtherIndex[4][i] + " : " + arrOtherIndex[5][i] + " : " + arrOtherIndex[9][i] + " :: " + indexArray[i]);
-        //     console.log((i+3) + " : " + arrOtherWeight[3][i] + " : " + arrOtherWeight[4][i] + " : " + arrOtherWeight[5][i] + " : " + arrOtherWeight[9][i]);
-        // }
 
         // calculate 91DayReturn and min7DayLoss for portfolio array
         var day91Arr = [];
