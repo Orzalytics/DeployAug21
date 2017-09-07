@@ -19,6 +19,7 @@
                     scope.render();
                     scope.renderScatter();
                     scope.renderTree();
+                    scope.renderReturnRisk();
                     $rootScope.strDrawStart = "none";
                   }
                 }, true);
@@ -27,6 +28,7 @@
                   if (value != undefined){
                     scope.renderScatter();
                     scope.renderTree();
+                    scope.renderReturnRisk();
                   }                        
                 });
 
@@ -34,6 +36,7 @@
                   scope.render();
                   scope.renderScatter();
                   scope.renderTree();
+                  scope.renderReturnRisk();
                 });
             // define render function
                 scope.renderScatter = function(data){
@@ -107,7 +110,7 @@
                       
                     // line for units of actual portfolio
                     var g = svg.append("svg:g")
-                      .style('stroke', '#F44336')
+                      .style('stroke', '#c2c2c2')
                       .style('fill', 'none');
 
                     g.append("g")
@@ -334,6 +337,152 @@
                     }
                   }
                 }
+                scope.renderReturnRisk = function(data){
+
+                  var elements = document.querySelectorAll('.data-returnriskgraph');
+                  elements.forEach(function (element) {
+                    element.parentNode.removeChild(element);
+                  });
+
+                  var secondchart = new drawReturnRiskChart(data, scope, "#return_risk_chart");
+
+                  // units graph of existing portfolio and comparison portfolio
+                  function drawReturnRiskChart(data, datadate, id){
+                    var y_Day91Return = $rootScope.returnRisk.portDay91Return;
+                    var x_Day7LossMin = $rootScope.returnRisk.fundDay91Return;
+                    var dateData = $rootScope.returnRisk.dateData;
+
+                    //  variables for SVG size
+                    var width = window.innerWidth;
+                    var height = 150;
+                    var margin = {top: 20, right: 10, bottom: 20, left: 40};
+                    if (window.innerWidth >= 1280)
+                      width = width / 100 * 25 - margin.left - margin.right;
+                    else 
+                      width = window.innerWidth - margin.left - margin.right;
+                    // creating a div to contain line charts.
+                    var div = d3.select(id);
+                    var svg = div.append('svg:svg')
+                    .attr('width', width)
+                    .attr('height', height)
+                    .attr('class', 'data-returnriskgraph');
+                    // .on("mousedown", onMouseStart)
+                    // .on("mousemove", onMouseMove)
+                    // .on("mouseup", onMouseEnd);
+                    
+                    // setup variables
+                    var y = d3.scale.linear()
+                      .domain([-0.15, 0.3])
+                      .range([height - margin.top,  0 + margin.bottom]);
+                    var x = d3.scale.linear()
+                      .domain([-0.15, 0.3])
+                      .range([ 0 + margin.left, width - margin.right ]);
+
+                    var xAxis = d3.svg.axis()
+                      .scale(x)
+                      .orient("bottom");
+
+                    var yAxis = d3.svg.axis()
+                      .scale(y)
+                      .orient("left");
+                      
+                    // line for units of actual portfolio
+                    var g = svg.append("svg:g")
+                      .style('stroke', '#c2c2c2')
+                      .style('fill', 'none');
+
+                    g.append("g")
+                        .attr("class", "risk_x_axis")
+                        .attr("transform", "translate(0 , " + (height - margin.top) + ")")
+                        .call(xAxis);
+
+                    g.append("g")
+                        .attr("class", "risk_y_axis")
+                        .attr("transform", "translate(" + (margin.left) + ", 0)")
+                        .call(yAxis);
+
+                    var clip = svg.append("defs").append("svg:clipPath")
+                        .attr("id", "clip")
+                        .append("svg:rect")
+                        .attr("id", "clip-rect")
+                        .attr("x", margin.left - 8)
+                        .attr("y", margin.bottom - 8)
+                        .attr("width", width - margin.left - margin.right + 16)
+                        .attr("height", height - margin.top - margin.bottom + 16);
+
+                    d3.selectAll(".tick > text")
+                        .style("font-size", "12px");
+
+                    d3.selectAll(".risk_x_axis > path")
+                        .attr("transform", "translate(0 , " + (-height+y(-0.15)+margin.top) + ")")
+
+                    svg.append("rect")
+                        .attr("class", "rect_circle")
+                        .attr("id", "rect_circle")
+                        .attr("x", 100)
+                        .attr("y", 100)
+                        .attr("width", 74)
+                        .attr("height", 60)
+                        .attr("clip-path", "url(#clip)")
+                        .style('fill', 'grey')
+                        .style('stroke-width', 1)
+                        .style('stroke', 'grey')
+                        .style("opacity", 0);
+
+                    svg.selectAll(".dot")
+                      .data(y_Day91Return)
+                    .enter().append("circle")
+                      .attr("r", 8)
+                      .attr("cx", function(d, i) {
+                        var xValue = x_Day7LossMin[i];
+                        if (xValue > 0.25) xValue = 0.25;
+                        if (xValue < 0) xValue = 0;
+                        return x(xValue);
+                        })
+                      .attr("cy", function(d) {
+                        var yValue = d;
+                        if (yValue > 0.3) yValue = 0.3;
+                        if (yValue < -0.15) yValue = -0.15;
+                        return y(yValue); 
+                        })
+                      .attr("clip-path", "url(#clip)")
+                      .style("fill", function(d, i){
+                        var cntFund = $rootScope.listOfPriceFund.length;
+                        var isPort = (i < cntFund) ? 0 : 1;
+                        var color = d3.rgb(116, 191, 71);
+                        return color;
+                      })
+                      .on("mouseover",  function(d, i){onMouseOver(i)})
+                      .on("mouseout",  onMouseOut);
+                      
+
+                    function onMouseOver(index){
+                      var xData = x_Day7LossMin[index];
+                      var yData = y_Day91Return[index];
+
+                      if (xData > 0.25) xData = 0.25;
+                      if (xData < 0) xData = 0;
+                      if (yData > 0.3) yData = 0.3;
+                      if (yData < -0.15) yData = -0.15;
+                      document.getElementById("return_risk_title").innerHTML = dateData[index];
+                      
+                      document.getElementById("return_risk_x").innerHTML = (xData * 100).toFixed(1) + "% - " + $rootScope.returnRisk.fundName;
+                      document.getElementById("return_risk_y").innerHTML = (yData * 100).toFixed(1) + ($rootScope.returnRisk.portName ? "% - " + $rootScope.returnRisk.portName : '%');
+
+                      var tooltip = document.getElementById("return_risk_tooltip");
+                      tooltip.style.left = (x(xData)+310 < width) ? ((x(xData) + 30).toFixed() + "px") : ((width-310) + "px");
+                      tooltip.style.top = (y(yData)+20).toFixed() + "px";
+                      tooltip.style.display = "block";
+                    }
+
+
+
+                    function onMouseOut(){
+                      document.getElementById("return_risk_tooltip").style.display = "none";
+                    }
+
+                  }
+                }
 
                 scope.renderTree = function(data){
 
@@ -516,7 +665,7 @@
                       g.append("svg:path")
                         .attr("d",lineGraph(data))
                         .style('stroke-width', 2)
-                        .style('stroke', '#3663d5')
+                        .style('stroke', '#029292')
                         .style('fill', 'none');
                   
                       // tooltip for gain or loss of portfolio
@@ -528,7 +677,7 @@
                             'x2': 0,
                             'y2': height,
                         })
-                        .attr("stroke", "black")
+                        .attr("stroke", "#0067a9")
                         .attr('class', 'verticalLine')
                         .style('stroke-width', 2);
                       // date of portfolio
@@ -639,7 +788,7 @@
                       g.append("svg:path")
                         .attr("d",lineGraph(data))
                         .style('stroke-width', 2)
-                        .style('stroke', '#3663d5')
+                        .style('stroke', '#029292')
                         .style('fill', 'none');
                       // tooltip
                       var verticalLine = svg.append('line')
@@ -649,7 +798,7 @@
                             'x2': 0,
                             'y2': height - 8
                         })
-                        .attr("stroke", "black")
+                        .attr("stroke", "#0067a9")
                         .attr('class', 'line_exvline')
                         .style('stroke-width', 2);
                       // tooltip value

@@ -401,9 +401,10 @@
       };
 
       $scope.updateReturnRisk = function () {
-        console.log('rootScope', $rootScope);
-        console.log('selectedFunds', $scope.arr.selectedFunds);
-
+        $rootScope.returnRisk.fundName = '';
+        $rootScope.returnRisk.dateData = [];
+        var arrayCount = parseInt(($rootScope.sliderIndex || 0) / 7) + 1;
+        $rootScope.returnRisk.fundDay91Return = Array.apply(null, new Array(arrayCount)).map(Number.prototype.valueOf,0);
         for (var i = 0; i < $rootScope.listOfPriceFund.length; i ++) {
           var fundData = $rootScope.listOfPriceFund[i];
           if (fundData.name != $scope.arr.selectedFunds)
@@ -411,28 +412,22 @@
 
           var dayRetData = $rootScope.dayRetData;
           var day91_return = dayRetData.day91_return[i];
-          var day7_loss = dayRetData.day7_loss[i];
 
-          var min = 99999;
           var firstValidIndex = -1;
 
           var y_Day91Return = [];
-          var x_Day7LossMin = [];
+          var dateData = [];
 
           for (var j = 0; j <= $rootScope.sliderIndex; j ++){
-            if (min > day7_loss[j]) min = day7_loss[j];
-            if ((day91_return[j] != 0 || day7_loss[j] != 0) && firstValidIndex < 0) {
-              firstValidIndex = j;
-            }
-            if (firstValidIndex >= 0 && ((j - firstValidIndex) % 7 == 0)) {
+            if (j % 7 == 0) {
+              dateData.push($rootScope.convertDate($rootScope.listOfPriceFund[0].udate[j]));
               y_Day91Return.push(day91_return[j]);
-              x_Day7LossMin.push(min);
             }
           }
 
-          console.log(y_Day91Return);
-          console.log(x_Day7LossMin);
-
+          $rootScope.returnRisk.fundName = $scope.arr.selectedFunds;
+          $rootScope.returnRisk.dateData = dateData;
+          $rootScope.returnRisk.fundDay91Return = y_Day91Return;
         }
       }
 
@@ -588,6 +583,7 @@
           if ($scope.arr.tableInfo[i].Portname != $scope.arr.username) continue;
           $rootScope.port91DayHistogram.name = $scope.arr.username;
           $rootScope.port91DayHistogram.portIndex = i;
+          $rootScope.returnRisk.portName = $scope.arr.username;
           
           for (var j = 0; j < $scope.arr.tableInfo[i].Portarray.length; j ++){
             var nFundIndex = $scope.GetFundIndex($scope.arr.tableInfo[i].Portarray[j].strFundName);
@@ -618,24 +614,33 @@
           {range: 0.2, value: 0},
           {range: 0.25, value: 0}
         ];
+        var arrayCount = parseInt($rootScope.sliderIndex / 7) + 1;
+        $rootScope.returnRisk.portDay91Return = Array.apply(null, new Array(arrayCount)).map(Number.prototype.valueOf,0);
 
         $rootScope.port91DayHistogram.maxValue = 10;
         if (portIndex == -1) {
           $rootScope.port91DayHistogram.name = '';
+          $rootScope.returnRisk.portName = '';
         } else {
+          var y_Day91Return = [];
           var otherPortfolioData = $rootScope.listofOtherPortfolio[portIndex].day91Array;
           var firstValidIndex = -1;
           for (var j = 0; j <= $rootScope.sliderIndex; j ++) {
             var portValue = otherPortfolioData[j];
             if (portValue != 0 && firstValidIndex < 0) {
               firstValidIndex = j;
+              $rootScope.port91DayHistogram.totalValue = $rootScope.sliderIndex - firstValidIndex + 1;
             }
 
             if (firstValidIndex >= 0) {
               var histoIndex = parseInt((portValue + 0.15) / 0.05);
               $rootScope.port91DayHistogram.data[histoIndex].value = $rootScope.port91DayHistogram.data[histoIndex].value + 1;
             }
+            if (j % 7 == 0) {
+              y_Day91Return.push(portValue);
+            }
           }
+          $rootScope.returnRisk.portDay91Return = y_Day91Return;
           for (var j = 0; j < $rootScope.port91DayHistogram.data.length; j ++) {
             if ($rootScope.port91DayHistogram.data[j].value + 1 > $rootScope.port91DayHistogram.maxValue)
               $rootScope.port91DayHistogram.maxValue = $rootScope.port91DayHistogram.data[j].value + 1;

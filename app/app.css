@@ -207,11 +207,10 @@ md-input-container label{
 }
 .scatter_tooltip{
     position : absolute;
-    border : 1px solid #ff6f31;
+    border : 2px solid #00aad5;
     border-radius : 5px;
-    background-color: white;
-    padding : 10px;
-    width: 320px;
+    background-color: rgba(255, 255, 255, 1);
+    padding : 5px;
     display: none;
 }
 
@@ -268,4 +267,9 @@ md-input-container label{
 .md-subcontent {
     height: 160px;
     position: relative;
+}
+
+.line_extoolTipValue {
+    background-color: #41bddf;
+    color: white;
 }

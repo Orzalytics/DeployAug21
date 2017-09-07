@@ -40,10 +40,10 @@
                     element.parentNode.removeChild(element);
                   });
 
-                  var secondchart = new drawScatterchart(data, scope, "#histogram_chart");
+                  var secondchart = new drawChart(data, scope, "#histogram_chart");
 
                   // units graph of existing portfolio and comparison portfolio
-                  function drawScatterchart(data, datadate, id){
+                  function drawChart(data, datadate, id){
                     var maxValue = $rootScope.port91DayHistogram.maxValue;
                     var barData = $rootScope.port91DayHistogram.data;
 
@@ -109,7 +109,6 @@
                         .style("font-size", "12px");
 
                     d3.selectAll(".x_axis1 > path")
-                        .style("stroke-dasharray", ("3, 3"))
                         .attr("transform", "translate(0 , " + (-height+y(0)+margin.top) + ")")
 
                     svg.append("rect")
@@ -141,10 +140,10 @@
                     function onMouseOver(index){
                       var xData = barData[index].range;
                       var yData = barData[index].value;
-                      console.log(y(yData) + height);
+                      var portion = (yData * 100 / $rootScope.port91DayHistogram.totalValue).toFixed(2)
       
                       var tooltip = document.getElementById("bar_tooltip");
-                      tooltip.innerHTML = yData.toString() + ' dias';
+                      tooltip.innerHTML = portion.toString() + ' %';
                       tooltip.style.display = "block";
                       tooltip.style.left = (x(xData + 0.025) - tooltip.clientWidth / 2 - 1).toFixed() + "px";
                       tooltip.style.top = (y(yData) - tooltip.clientHeight - 12).toFixed() + "px";

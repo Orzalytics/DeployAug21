@@ -72,7 +72,6 @@
     //  arrays of fund names, i.e., for fund 40 it's n[40][0].alias
     var n = []; n.push([]);
     $http.get('/ret1').success(function (fundnames) {
-        console.log(fundnames);
         for (var i = 0; i < fundnames.length; i ++){
             fundnames[i].fund_id_alias_fund = fundnames[i].fund_id_alias_fund * 1;
         }
@@ -83,7 +82,6 @@
 
         // arrays of funds and their calculations
         $http.get('/ret/' + f_startDate).success(function (rows) {
-            console.log(rows);
             for (var i = 0; i < rows.length; i ++){
                 rows[i].fund_id_pr_fund = rows[i].fund_id_pr_fund * 1;
                 rows[i].pr_fund = rows[i].pr_fund * 1;
@@ -256,6 +254,13 @@
                 ],
                 maxValue: 10,
             }
+            $rootScope.returnRisk = {
+                portName: '',
+                fundName: '',
+                portDay91Return: [],
+                fundDay91Return: [],
+                dateData: []
+            }
         });
     });
 
@@ -336,7 +341,6 @@
                 // if ($rootScope.listOfPortfolio[i].portfolio_id != "accionescolombia") continue;
                 $rootScope.onChangeUserList($rootScope.listOfPortfolio[i].portfolio_id);
             }
-            console.log('listofOtherPortfolio', $rootScope.listofOtherPortfolio);
         });
     }
     $rootScope.onChangeUserList = function(value){
