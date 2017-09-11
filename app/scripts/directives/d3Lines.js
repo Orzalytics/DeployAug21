@@ -348,8 +348,8 @@
 
                   // units graph of existing portfolio and comparison portfolio
                   function drawReturnRiskChart(data, datadate, id){
-                    var y_Day91Return = $rootScope.returnRisk.portDay91Return;
-                    var x_Day7LossMin = $rootScope.returnRisk.fundDay91Return;
+                    var x_portDay91Return = $rootScope.returnRisk.portDay91Return;
+                    var y_fundDay91Return = $rootScope.returnRisk.fundDay91Return;
                     var dateData = $rootScope.returnRisk.dateData;
 
                     //  variables for SVG size
@@ -430,13 +430,13 @@
                         .style("opacity", 0);
 
                     svg.selectAll(".dot")
-                      .data(y_Day91Return)
+                      .data(y_fundDay91Return)
                     .enter().append("circle")
                       .attr("r", 8)
                       .attr("cx", function(d, i) {
-                        var xValue = x_Day7LossMin[i];
-                        if (xValue > 0.25) xValue = 0.25;
-                        if (xValue < 0) xValue = 0;
+                        var xValue = x_portDay91Return[i];
+                        if (xValue > 3) xValue = 0.3;
+                        if (xValue < -0.15) xValue = -0.15;
                         return x(xValue);
                         })
                       .attr("cy", function(d) {
@@ -446,28 +446,23 @@
                         return y(yValue); 
                         })
                       .attr("clip-path", "url(#clip)")
-                      .style("fill", function(d, i){
-                        var cntFund = $rootScope.listOfPriceFund.length;
-                        var isPort = (i < cntFund) ? 0 : 1;
-                        var color = d3.rgb(116, 191, 71);
-                        return color;
-                      })
+                      .style("fill", 'rgba(116, 191, 71, 0.75)')
                       .on("mouseover",  function(d, i){onMouseOver(i)})
                       .on("mouseout",  onMouseOut);
                       
 
                     function onMouseOver(index){
-                      var xData = x_Day7LossMin[index];
-                      var yData = y_Day91Return[index];
+                      var xData = x_portDay91Return[index];
+                      var yData = y_fundDay91Return[index];
 
-                      if (xData > 0.25) xData = 0.25;
-                      if (xData < 0) xData = 0;
+                      if (xData > 0.3) xData = 0.25;
+                      if (xData < -0.15) xData = -0.15;
                       if (yData > 0.3) yData = 0.3;
                       if (yData < -0.15) yData = -0.15;
                       document.getElementById("return_risk_title").innerHTML = dateData[index];
                       
-                      document.getElementById("return_risk_x").innerHTML = (xData * 100).toFixed(1) + "% - " + $rootScope.returnRisk.fundName;
-                      document.getElementById("return_risk_y").innerHTML = (yData * 100).toFixed(1) + ($rootScope.returnRisk.portName ? "% - " + $rootScope.returnRisk.portName : '%');
+                      document.getElementById("return_risk_x").innerHTML = (yData * 100).toFixed(1) + "% - " + $rootScope.returnRisk.fundName;
+                      document.getElementById("return_risk_y").innerHTML = (xData * 100).toFixed(1) + ($rootScope.returnRisk.portName ? "% - " + $rootScope.returnRisk.portName : '%');
 
                       var tooltip = document.getElementById("return_risk_tooltip");
                       tooltip.style.left = (x(xData)+310 < width) ? ((x(xData) + 30).toFixed() + "px") : ((width-310) + "px");

@@ -419,7 +419,7 @@
           var dateData = [];
 
           for (var j = 0; j <= $rootScope.sliderIndex; j ++){
-            if (j % 7 == 0) {
+            if (j % 7 == 0 && $rootScope.returnRisk.firstValidIndex > -1 && j >= $rootScope.returnRisk.firstValidIndex) {
               dateData.push($rootScope.convertDate($rootScope.listOfPriceFund[0].udate[j]));
               y_Day91Return.push(day91_return[j]);
             }
@@ -615,7 +615,7 @@
           {range: 0.25, value: 0}
         ];
         var arrayCount = parseInt($rootScope.sliderIndex / 7) + 1;
-        $rootScope.returnRisk.portDay91Return = Array.apply(null, new Array(arrayCount)).map(Number.prototype.valueOf,0);
+        $rootScope.returnRisk.portDay91Return = Array.apply(null, new Array(0)).map(Number.prototype.valueOf,0);
 
         $rootScope.port91DayHistogram.maxValue = 10;
         if (portIndex == -1) {
@@ -629,14 +629,21 @@
             var portValue = otherPortfolioData[j];
             if (portValue != 0 && firstValidIndex < 0) {
               firstValidIndex = j;
+              $rootScope.returnRisk.firstValidIndex = j;
               $rootScope.port91DayHistogram.totalValue = $rootScope.sliderIndex - firstValidIndex + 1;
             }
 
             if (firstValidIndex >= 0) {
               var histoIndex = parseInt((portValue + 0.15) / 0.05);
+              if (histoIndex < 0) {
+                histoIndex = 0;
+              }
+              if (histoIndex > 8) {
+                histoIndex = 8;
+              }
               $rootScope.port91DayHistogram.data[histoIndex].value = $rootScope.port91DayHistogram.data[histoIndex].value + 1;
             }
-            if (j % 7 == 0) {
+            if (j % 7 == 0 && firstValidIndex >= 0) {
               y_Day91Return.push(portValue);
             }
           }
